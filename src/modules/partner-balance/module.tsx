@@ -1,6 +1,6 @@
-import { CurrentBalance } from './components/current-balance';
-import { Debt } from './components/debt';
-import { TotalEarned } from './components/total-earned';
+import { CurrentBalance } from './slices/current-balance';
+import { Debt } from './slices/debt';
+import { TotalEarned } from './slices/total-earned';
 
 export const PartnerBalanceModule = () => {
   return (
