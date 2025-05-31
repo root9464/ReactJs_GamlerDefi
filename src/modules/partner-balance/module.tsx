@@ -1,17 +1,37 @@
+import { LEADER_ID } from '@/shared/constants/consts';
+import { useJettonWallet } from '@/shared/hooks/api/useJettonWallet';
+import { useTonAddress } from '@tonconnect/ui-react';
+import { useDebt, useEarnings } from './hooks/api/usePaymentStats';
 import { CurrentBalance } from './slices/current-balance';
 import { Debt } from './slices/debt';
 import { TotalEarned } from './slices/total-earned';
 
 export const PartnerBalanceModule = () => {
+  const address = useTonAddress();
+  const {
+    data: jettonWallets,
+    isLoading: isLoadingJettonWallets,
+    isError: isErrorJettonWallets,
+    isSuccess: isSuccessJettonWallets,
+  } = useJettonWallet({ address: address! });
+  const jettonWallet = jettonWallets?.balances.find((balance) => balance.jetton.symbol === 'FROGE');
+  const { data: debt, isLoading: isLoadingDebt, isError: isErrorDebt, isSuccess: isSuccessDebt } = useDebt(LEADER_ID);
+  const { data: earnings, isLoading: isLoadingEarnings, isError: isErrorEarnings, isSuccess: isSuccessEarnings } = useEarnings(LEADER_ID);
   return (
     <div className='flex h-[128px] w-[832px] flex-col gap-2.5'>
       <h2 className='text-lg font-medium text-black/85'>Партнерский баланс:</h2>
       <div className='flex flex-row justify-between bg-[#F6FFED] px-[26px] py-[18px]'>
-        <TotalEarned totalEarned={12500} />
+        {isSuccessEarnings && <TotalEarned totalEarned={earnings.balance} />}
+        {isLoadingEarnings && <p>Loading...</p>}
+        {isErrorEarnings && <p>Ошибка при загрузке баланса</p>}
         <Line />
-        <CurrentBalance balance={1000} />
+        {isSuccessJettonWallets && jettonWallet && <CurrentBalance balance={Number(jettonWallet?.balance) / 10 ** jettonWallet?.jetton.decimals} />}
+        {isLoadingJettonWallets && <p>Loading...</p>}
+        {isErrorJettonWallets && <p>Ошибка при загрузке баланса</p>}
         <Line />
-        <Debt arrears={500} />
+        {isSuccessDebt && <Debt arrears={debt} />}
+        {isLoadingDebt && <p>Loading...</p>}
+        {isErrorDebt && <p>Ошибка при загрузке долга</p>}
       </div>
     </div>
   );

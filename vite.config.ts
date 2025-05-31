@@ -37,9 +37,17 @@ export default defineConfig({
     port: 3000,
     host: true,
     proxy: {
-      '/api': {
+      '/api/web3': {
         target: 'http://127.0.0.1:6069',
         changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api\/web3/, '/api'),
+      },
+      '/api/web2': {
+        target: 'https://serv.gamler.atma-dev.ru',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api\/web2/, ''),
       },
     },
   },

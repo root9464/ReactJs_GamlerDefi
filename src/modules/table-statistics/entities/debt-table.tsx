@@ -1,14 +1,19 @@
-import type { GetProp, TableColumnsType, TablePaginationConfig, TableProps } from 'antd';
+import { LEADER_ID } from '@/shared/constants/consts';
+import type { GetProp, TablePaginationConfig, TableProps } from 'antd';
 import { Button, Table } from 'antd';
+import Column from 'antd/es/table/Column';
 import type { SorterResult } from 'antd/es/table/interface';
-import { useState } from 'react';
+import { useState, type FC } from 'react';
+import { usePay } from '../hooks/api/usePay';
+import { usePayOrder } from '../hooks/api/usePayOrder';
 
 type DebtTableDataType = {
-  order_id: number;
-  tickets: string;
+  order_id: string;
+  tickets: number;
   date: string;
   debt_amount: number;
   refferal: string;
+  refferer_id: number;
 };
 
 type TableParams = {
@@ -18,55 +23,9 @@ type TableParams = {
   filters?: Parameters<GetProp<TableProps<DebtTableDataType>, 'onChange'>>[1];
 };
 
-const columns: TableColumnsType<DebtTableDataType> = [
-  {
-    title: 'Количество билетов',
-    dataIndex: 'tickets',
-    sorter: (a, b) => a.tickets.localeCompare(b.tickets),
-  },
-  {
-    title: 'Дата',
-    dataIndex: 'date',
-    sorter: (a, b) => a.date.localeCompare(b.date),
-  },
-  {
-    title: 'Сумма задолженности',
-    dataIndex: 'debt_amount',
-    sorter: (a, b) => a.debt_amount - b.debt_amount,
-  },
-  {
-    title: 'Реферал',
-    dataIndex: 'refferal',
-  },
-  {
-    title: 'Действие',
-    dataIndex: 'action',
-    render: (_, record) => <Button onClick={() => handleAction(record)}>Действие</Button>,
-  },
-];
-
-const DEBT_TABLE_DATA: DebtTableDataType[] = [
-  {
-    order_id: 1,
-    tickets: '10',
-    date: '2024-01-01',
-    debt_amount: 1000,
-    refferal: '1000',
-  },
-  {
-    order_id: 2,
-    tickets: '10',
-    date: '2024-01-01',
-    debt_amount: 1000,
-    refferal: '1000',
-  },
-];
-
-const handleAction = (record: DebtTableDataType) => {
-  console.log('Вы выбрали запись:', record);
-};
-
-export const DebtTable = () => {
+export const DebtTable: FC<{ tableData: DebtTableDataType[] }> = ({ tableData }) => {
+  const { mutateAsync: createCell, isPending, isSuccess } = usePayOrder();
+  const { payOrder } = usePay(LEADER_ID);
   const [tableParams, setTableParams] = useState<TableParams>({
     pagination: {
       current: 1,
@@ -81,5 +40,22 @@ export const DebtTable = () => {
     }));
   };
 
-  return <Table<DebtTableDataType> columns={columns} dataSource={DEBT_TABLE_DATA} onChange={handleTableChange} pagination={tableParams.pagination} />;
+  return (
+    <Table dataSource={tableData} onChange={handleTableChange} pagination={tableParams.pagination} rowKey='order_id'>
+      <Column title='Количество билетов' dataIndex='tickets' sorter={(a, b) => a.tickets - b.tickets} key='tickets' />
+      <Column title='Дата' dataIndex='date' sorter={(a, b) => a.date.localeCompare(b.date)} key='date' />
+      <Column title='Сумма задолженности' dataIndex='debt_amount' sorter={(a, b) => a.debt_amount - b.debt_amount} key='debt_amount' />
+      <Column title='Реферал' dataIndex='refferal' key='refferal' />
+      <Column
+        title={isPending ? 'Ожидание...' : isSuccess ? 'Выполнено' : 'Действие'}
+        dataIndex='action'
+        render={(_, record: DebtTableDataType) => (
+          <Button key={record.order_id} onClick={() => payOrder(record.order_id, record.refferer_id, createCell)}>
+            Действие
+          </Button>
+        )}
+        key='action'
+      />
+    </Table>
+  );
 };
