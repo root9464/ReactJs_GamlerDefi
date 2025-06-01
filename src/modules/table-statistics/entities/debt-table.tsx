@@ -50,7 +50,7 @@ export const DebtTable: FC<{ tableData: DebtTableDataType[] }> = ({ tableData })
         title={isPending ? 'Ожидание...' : isSuccess ? 'Выполнено' : 'Действие'}
         dataIndex='action'
         render={(_, record: DebtTableDataType) => (
-          <Button key={record.order_id} onClick={() => payOrder(record.order_id, record.refferer_id, createCell)}>
+          <Button key={record.order_id} onClick={() => payOrder(createCell, record.order_id, [record.refferer_id, record.debt_amount])}>
             Действие
           </Button>
         )}

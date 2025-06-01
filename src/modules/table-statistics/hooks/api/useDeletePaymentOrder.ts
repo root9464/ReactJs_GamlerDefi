@@ -1,4 +1,4 @@
-import { fetchData } from '@/shared/utils/utils';
+import { fetchData, validateResult } from '@/shared/utils/utils';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { z } from 'zod/v4';
@@ -11,15 +11,17 @@ type ValidatorOrder = {
   tx_hash: string;
   tx_query_id: number;
   target_address: string;
-  payment_order_id: string;
+  payment_order_id?: string;
   status: 'pending';
 };
 
 type Options = {
   orderId?: string;
   type: 'all' | 'single';
-  amount: number;
-  reffererId: number;
+  array: Array<{
+    amount: number;
+    reffererId: number;
+  }>;
 };
 
 const ValidationStatus = z.enum(['pending', 'waiting', 'running', 'success', 'failed']);
@@ -33,13 +35,6 @@ const ValidatorOrderSchema = z.object({
 
 type ValidatorOrderResponse = z.infer<typeof ValidatorOrderSchema>;
 
-const deletePaymentOrder = async (type: Options['type'], orderId?: string) => {
-  const endpoint = type === 'all' ? '/api/web3/referral/payment-orders/all' : `/api/web3/referral/payment-orders/${orderId}`;
-  const { data, status, statusText } = await axios.delete<DeletePaymentOrderResponse>(endpoint);
-  if (status !== 200) throw new Error(statusText);
-  return data;
-};
-
 const UpdateEarningBalanceSchema = z.object({
   success: z.boolean(),
   message: z.string(),
@@ -50,15 +45,12 @@ const UpdateEarningBalanceSchema = z.object({
 type UpdateEarningBalanceResponse = z.infer<typeof UpdateEarningBalanceSchema>;
 
 const updateEarningBalance = async (userId: number, amount: number) => {
-  const data = await fetchData<UpdateEarningBalanceResponse>({
-    method: 'POST',
-    url: `/api/web2/referral/user/${userId}/balance`,
-    schema: UpdateEarningBalanceSchema,
-    body: {
-      amount,
-    },
+  const { data, status, statusText } = await axios.patch<UpdateEarningBalanceResponse>(`/api/web2/referral/user/${userId}/balance`, {
+    amount,
   });
-  return data;
+  if (status !== 200) throw new Error(statusText);
+
+  return validateResult(data, UpdateEarningBalanceSchema);
 };
 
 const useDeletePaymentOrder = (authorId: number) => {
@@ -76,15 +68,32 @@ const useDeletePaymentOrder = (authorId: number) => {
       });
       return { result, options };
     },
-    onSuccess: async ({ result: ValidData, options: { type, orderId, amount, reffererId } }) => {
+    onSuccess: async ({ result: ValidData, options: { type, orderId, array } }) => {
       switch (true) {
         case ValidData.status === 'success' && type === 'all':
-          await updateEarningBalance(reffererId, amount);
-          return await deletePaymentOrder('all');
+          array.forEach(async (item) => {
+            await updateEarningBalance(item.reffererId, item.amount);
+          });
+          return await fetchData<DeletePaymentOrderResponse>({
+            method: 'DELETE',
+            url: '/api/web3/referral/payment-orders/all',
+            schema: z.object({
+              message: z.string(),
+            }),
+          });
         case ValidData.status === 'success' && type === 'single':
           if (!orderId) throw new Error('Order ID is required');
-          await updateEarningBalance(reffererId, amount);
-          return await deletePaymentOrder('single', orderId);
+          await updateEarningBalance(array[0].reffererId, array[0].amount);
+          return await fetchData<DeletePaymentOrderResponse>({
+            method: 'DELETE',
+            url: `/api/web3/referral/payment-orders`,
+            schema: z.object({
+              message: z.string(),
+            }),
+            params: {
+              order_id: orderId,
+            },
+          });
         default:
           throw new Error('Invalid delete type');
       }

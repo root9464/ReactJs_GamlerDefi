@@ -3,7 +3,9 @@ import { formatUnixToDate } from '@/shared/utils/utils';
 import { Button, Tabs } from 'antd';
 import { DebtTable } from './entities/debt-table';
 import { InviteTable } from './entities/invite-table';
+import { usePay } from './hooks/api/usePay';
 import { usePaymentOrder } from './hooks/api/usePaymentOrders';
+import { usePayAllOrders } from './hooks/api/usePayOrder';
 
 const INVITE_TABLE_DATA = [
   {
@@ -55,6 +57,15 @@ export const TableStatisticsModule = () => {
       }))
     : [];
 
+  const { mutateAsync: createCell, isPending: isPendingPayAllOrders, isSuccess: isSuccessPayAllOrders } = usePayAllOrders();
+  const { payAllOrders } = usePay(LEADER_ID);
+  const debt_arr = debt_table_data.map((order) => ({
+    amount: order.debt_amount,
+    reffererId: order.refferer_id,
+  }));
+
+  const handlePayAllOrders = () => payAllOrders(createCell, debt_arr);
+
   return (
     <div className='flex flex-col gap-2.5'>
       <Tabs defaultActiveKey='1' className='w-[1141px]'>
@@ -66,7 +77,9 @@ export const TableStatisticsModule = () => {
         </Tabs.TabPane>
         <Tabs.TabPane tab='Задолженности' key='3' className='flex flex-col gap-2.5'>
           <div className='flex flex-row items-center gap-2.5'>
-            <Button type='primary'>Погасить все</Button>
+            <Button type='primary' onClick={handlePayAllOrders}>
+              {isPendingPayAllOrders ? 'Ожидание...' : isSuccessPayAllOrders ? 'Выполнено' : 'Погасить все'}
+            </Button>
             <p className='text-black/85'>
               Чтобы погасить все задолженности сразу, нажмите кнопку “Погасить все”. Или выберите реферала и оплатите каждую транзакцию отдельно
             </p>
