@@ -1,56 +1,25 @@
-import type { GetProp, TableColumnsType, TablePaginationConfig, TableProps } from 'antd';
-import { Table } from 'antd';
+import { Table, type GetProp, type TablePaginationConfig, type TableProps } from 'antd';
+import Column from 'antd/es/table/Column';
 import type { SorterResult } from 'antd/es/table/interface';
-import { useState, type FC, type Key } from 'react';
+import { useState, type FC } from 'react';
 
-type InviteTableDataType = {
-  key: Key;
-  name: string;
-  percent: number;
-  tg_name: string;
-  date: string;
+export type InviteTableType = {
+  user_id: number;
+  name: string | null;
+  telegram: string;
+  refer_id: number | null | undefined;
+  percent?: number;
+  createdAt?: string | null;
 };
 
 type TableParams = {
   pagination?: TablePaginationConfig;
-  sortField?: SorterResult<InviteTableDataType>['field'];
-  sortOrder?: SorterResult<InviteTableDataType>['order'];
-  filters?: Parameters<GetProp<TableProps<InviteTableDataType>, 'onChange'>>[1];
+  sortField?: SorterResult<InviteTableType>['field'];
+  sortOrder?: SorterResult<InviteTableType>['order'];
+  filters?: Parameters<GetProp<TableProps<InviteTableType>, 'onChange'>>[1];
 };
 
-const columns: TableColumnsType<InviteTableDataType> = [
-  {
-    title: 'Name',
-    dataIndex: 'name',
-    sorter: (a, b) => a.name.localeCompare(b.name),
-  },
-  {
-    title: 'Процент',
-    dataIndex: 'percent',
-    sorter: (a, b) => a.percent - b.percent,
-    filters: [
-      {
-        text: '20%',
-        value: 20,
-      },
-      {
-        text: '2%',
-        value: 2,
-      },
-    ],
-    onFilter: (value, record) => record.percent === value,
-  },
-  {
-    title: 'Telegram',
-    dataIndex: 'tg_name',
-  },
-  {
-    title: 'Дата',
-    dataIndex: 'date',
-  },
-];
-
-export const InviteTable: FC<{ tableData: InviteTableDataType[] }> = ({ tableData }) => {
+export const InviteTable: FC<{ tableData: InviteTableType[] }> = ({ tableData }) => {
   const [tableParams, setTableParams] = useState<TableParams>({
     pagination: {
       current: 1,
@@ -64,6 +33,12 @@ export const InviteTable: FC<{ tableData: InviteTableDataType[] }> = ({ tableDat
       pagination,
     }));
   };
-
-  return <Table<InviteTableDataType> columns={columns} dataSource={tableData} onChange={handleTableChange} pagination={tableParams.pagination} />;
+  return (
+    <Table dataSource={tableData} onChange={handleTableChange} pagination={tableParams.pagination} rowKey='user_id'>
+      <Column title='Реферал' dataIndex='name' key='name' />
+      <Column title='Процент' dataIndex='percent' key='percent' sorter={(a, b) => a.percent - b.percent} />
+      <Column title='Телеграм' dataIndex='telegram' key='telegram' />
+      <Column title='Дата' dataIndex='createdAt' sorter={(a, b) => a.createdAt.localeCompare(b.createdAt)} key='createdAt' />
+    </Table>
+  );
 };

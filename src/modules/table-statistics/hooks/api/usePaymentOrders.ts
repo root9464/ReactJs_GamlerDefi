@@ -24,30 +24,30 @@ const PaymentOrderSchema = z.object({
 type Level = z.infer<typeof LevelSchema>;
 type PaymentOrder = z.infer<typeof PaymentOrderSchema>;
 
-const ReferrerSchema = z.object({
+const BaseUserSchema = z.object({
   user_id: z.number(),
   name: z.string().nullable(),
   surname: z.string().nullable(),
   telegram: z.string().regex(/^@.+/, 'Telegram must start with @ and contain at least one character'),
   photo_path: z.string().nullable(),
-  referral_id: z.number().nullable().optional(),
+  refer_id: z.number().nullable().optional(),
   wallet_address: z.string().length(48, 'Wallet address must be 48 characters long').nullable(),
   referral_program_choice: z.boolean(),
 });
 
-const ReferralProgramChoiceSchema = ReferrerSchema.extend({
-  createdAt: z.iso.datetime({ message: 'createdAt must be a valid ISO 8601 date string' }),
+const ReferralProgramChoiceSchema = BaseUserSchema.extend({
+  createdAt: z.iso.datetime({ message: 'createdAt must be a valid ISO 8601 date string' }).nullable(),
 });
 
-const AdditionalInformationSchema = ReferrerSchema.extend({
+const AdditionalInformationSchema = BaseUserSchema.extend({
   referred_users: z.array(ReferralProgramChoiceSchema).optional(),
 });
 
-type Referrer = z.infer<typeof ReferrerSchema>;
+type BaseUser = z.infer<typeof BaseUserSchema>;
 type AdditionalInformation = z.infer<typeof AdditionalInformationSchema>;
 type ReferralProgramChoice = z.infer<typeof ReferralProgramChoiceSchema>;
 
-type AdditionalProperties = Pick<Referrer, 'telegram'>;
+type AdditionalProperties = Pick<BaseUser, 'telegram'>;
 type PaymentOrdersResponse = Extend<PaymentOrder, AdditionalProperties>;
 
 const usePaymentOrder = (authorId: number) =>
@@ -78,5 +78,5 @@ const usePaymentOrder = (authorId: number) =>
     enabled: !!authorId,
   });
 
-export { PaymentOrderSchema, ReferralProgramChoiceSchema, usePaymentOrder };
+export { BaseUserSchema, PaymentOrderSchema, ReferralProgramChoiceSchema, usePaymentOrder };
 export type { Level, PaymentOrder, ReferralProgramChoice };

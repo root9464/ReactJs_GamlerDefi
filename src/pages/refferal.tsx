@@ -1,7 +1,7 @@
+import { PartnerBalanceModule } from '@/modules/partner-balance/module';
 import { ReferralLinkModule } from '@/modules/referral-link/module';
 import { TableStatisticsModule } from '@/modules/table-statistics/module';
 import { TonConnectButton } from '@tonconnect/ui-react';
-import { PartnerBalanceModule } from '../modules/partner-balance/module';
 
 export default function RefferalPage() {
   return (

@@ -1,11 +1,14 @@
 import { LEADER_ID } from '@/shared/constants/consts';
 import { formatUnixToDate } from '@/shared/utils/utils';
+import { useTonAddress } from '@tonconnect/ui-react';
 import { Button, Tabs } from 'antd';
 import { DebtTable } from './entities/debt-table';
 import { InviteTable } from './entities/invite-table';
+import { trimUserData } from './helpers/serialize';
 import { usePay } from './hooks/api/usePay';
 import { usePaymentOrder } from './hooks/api/usePaymentOrders';
 import { usePayAllOrders } from './hooks/api/usePayOrder';
+import { useRefferals } from './hooks/api/useRefferals';
 
 const INVITE_TABLE_DATA = [
   {
@@ -39,6 +42,7 @@ const INVITE_TABLE_DATA = [
 ];
 
 export const TableStatisticsModule = () => {
+  const address = useTonAddress();
   const {
     data: paymentOrders,
     isLoading: isLoadingPaymentOrders,
@@ -66,6 +70,11 @@ export const TableStatisticsModule = () => {
 
   const handlePayAllOrders = () => payAllOrders(createCell, debt_arr);
 
+  const { data: refferals, isLoading: isLoadingRefferals, isError: isErrorRefferals, isSuccess: isSuccessRefferals } = useRefferals(address);
+  console.log(refferals);
+  const refferals_table_data = refferals && trimUserData(refferals);
+
+  console.log(refferals_table_data);
   return (
     <div className='flex flex-col gap-2.5'>
       <Tabs defaultActiveKey='1' className='w-[1141px]'>
@@ -73,7 +82,9 @@ export const TableStatisticsModule = () => {
           <h1>f</h1>
         </Tabs.TabPane>
         <Tabs.TabPane tab='Ваши приглашённые' key='2'>
-          <InviteTable tableData={INVITE_TABLE_DATA} />
+          {isSuccessRefferals && refferals_table_data && <InviteTable tableData={refferals_table_data.referred_users ?? []} />}
+          {isLoadingRefferals && <p>Loading...</p>}
+          {isErrorRefferals && <p>Ошибка при загрузке рефералов</p>}
         </Tabs.TabPane>
         <Tabs.TabPane tab='Задолженности' key='3' className='flex flex-col gap-2.5'>
           <div className='flex flex-row items-center gap-2.5'>
