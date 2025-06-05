@@ -4,42 +4,13 @@ import { useTonAddress } from '@tonconnect/ui-react';
 import { Button, Tabs } from 'antd';
 import { DebtTable } from './entities/debt-table';
 import { InviteTable } from './entities/invite-table';
-import { trimUserData } from './helpers/serialize';
+import { TransactionsTable } from './entities/transactions-table';
+import { filterFrogeTransfers, trimUserData } from './helpers/serialize';
+import { useGetTransactions } from './hooks/api/useGetTransactions';
 import { usePay } from './hooks/api/usePay';
 import { usePaymentOrder } from './hooks/api/usePaymentOrders';
 import { usePayAllOrders } from './hooks/api/usePayOrder';
 import { useRefferals } from './hooks/api/useRefferals';
-
-const INVITE_TABLE_DATA = [
-  {
-    key: '1',
-    name: 'John Brown',
-    percent: 98,
-    tg_name: '60',
-    date: '70',
-  },
-  {
-    key: '2',
-    name: 'Jim Green',
-    percent: 98,
-    tg_name: '60',
-    date: '70',
-  },
-  {
-    key: '3',
-    name: 'Joe Black',
-    percent: 98,
-    tg_name: '60',
-    date: '70',
-  },
-  {
-    key: '4',
-    name: 'Jim Red',
-    percent: 88,
-    tg_name: '60',
-    date: '70',
-  },
-];
 
 export const TableStatisticsModule = () => {
   const address = useTonAddress();
@@ -71,15 +42,25 @@ export const TableStatisticsModule = () => {
   const handlePayAllOrders = () => payAllOrders(createCell, debt_arr);
 
   const { data: refferals, isLoading: isLoadingRefferals, isError: isErrorRefferals, isSuccess: isSuccessRefferals } = useRefferals(address);
-  console.log(refferals);
   const refferals_table_data = refferals && trimUserData(refferals);
 
-  console.log(refferals_table_data);
+  const {
+    data: transactions,
+    isLoading: isLoadingTransactions,
+    isError: isErrorTransactions,
+    isSuccess: isSuccessTransactions,
+  } = useGetTransactions(address ?? '');
+
+  const transactions_table_data = transactions && filterFrogeTransfers(transactions);
+  console.log(transactions_table_data);
+
   return (
     <div className='flex flex-col gap-2.5'>
       <Tabs defaultActiveKey='1' className='w-[1141px]'>
         <Tabs.TabPane tab='Таблица статистики' key='1'>
-          <h1>f</h1>
+          {isSuccessTransactions && transactions && <TransactionsTable tableData={transactions_table_data ?? []} />}
+          {isLoadingTransactions && <p>Loading...</p>}
+          {isErrorTransactions && <p>Ошибка при загрузке транзакций</p>}
         </Tabs.TabPane>
         <Tabs.TabPane tab='Ваши приглашённые' key='2'>
           {isSuccessRefferals && refferals_table_data && <InviteTable tableData={refferals_table_data.referred_users ?? []} />}

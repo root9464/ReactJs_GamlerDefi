@@ -1,4 +1,7 @@
+import { formatUnixToDate } from '@/shared/utils/utils';
+import type { Action, ResponseGetTrHistory } from '../hooks/api/useGetTransactions';
 import type { Referrals } from '../hooks/api/useRefferals';
+import { isJettonTransfer } from '../utils/transactions';
 
 type TrimmedUser = {
   user_id: number;
@@ -32,4 +35,21 @@ const trimUserData = (user: Referrals, level: number = 0): TrimmedUser => {
   return result;
 };
 
-export { trimUserData };
+const isFrogeJettonTransfer = (action: Action): action is Extract<Action, { type: 'JettonTransfer' }> =>
+  isJettonTransfer(action) && action.JettonTransfer.jetton.symbol === 'FROGE';
+
+function filterFrogeTransfers(data: ResponseGetTrHistory) {
+  return data.events.flatMap((event) =>
+    event.actions
+      .filter(isJettonTransfer)
+      .filter(isFrogeJettonTransfer)
+      .map((action) => ({
+        id: event.event_id,
+        time: formatUnixToDate(event.timestamp),
+        amount: Number(action.JettonTransfer.amount) / 10 ** action.JettonTransfer.jetton.decimals,
+        action: action.simple_preview.description,
+      })),
+  );
+}
+
+export { filterFrogeTransfers, trimUserData };
