@@ -87,7 +87,7 @@ const useGetTransactions = (address: string) => {
         params: {
           initiator: true,
           subject_only: false,
-          limit: 1,
+          limit: 100,
         },
       });
 

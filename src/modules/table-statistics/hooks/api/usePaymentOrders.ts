@@ -78,5 +78,5 @@ const usePaymentOrder = (authorId: number) =>
     enabled: !!authorId,
   });
 
-export { BaseUserSchema, PaymentOrderSchema, ReferralProgramChoiceSchema, usePaymentOrder };
-export type { Level, PaymentOrder, ReferralProgramChoice };
+export { AdditionalInformationSchema, BaseUserSchema, PaymentOrderSchema, ReferralProgramChoiceSchema, usePaymentOrder };
+export type { AdditionalInformation, Level, PaymentOrder, ReferralProgramChoice };

@@ -34,7 +34,7 @@ export const TransactionsTable: FC<{ tableData: TransactionsTableDataType[] }> =
   };
 
   return (
-    <Table dataSource={tableData} onChange={handleTableChange} pagination={tableParams.pagination} rowKey='order_id'>
+    <Table dataSource={tableData} onChange={handleTableChange} pagination={tableParams.pagination} rowKey='id'>
       <Column title='Дата' dataIndex='time' key='time' />
       <Column title='Сумма' dataIndex='amount' key='amount' />
       <Column title='Действие' dataIndex='action' key='action' />

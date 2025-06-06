@@ -3,7 +3,7 @@ import { Button } from 'antd';
 import type { FC } from 'react';
 
 type CurrentBalanceProps = {
-  balance: number;
+  balance: string;
 };
 
 export const CurrentBalance: FC<CurrentBalanceProps> = ({ balance }) => {

@@ -1,4 +1,4 @@
-import { LEADER_ID } from '@/shared/constants/consts';
+import { useAccount } from '@/shared/hooks/api/useAccount';
 import { useJettonWallet } from '@/shared/hooks/api/useJettonWallet';
 import { useTonAddress } from '@tonconnect/ui-react';
 import { useDebt, useEarnings } from './hooks/api/usePaymentStats';
@@ -8,6 +8,7 @@ import { TotalEarned } from './slices/total-earned';
 
 export const PartnerBalanceModule = () => {
   const address = useTonAddress();
+  const { data: account } = useAccount(address ?? '');
   const {
     data: jettonWallets,
     isLoading: isLoadingJettonWallets,
@@ -15,8 +16,8 @@ export const PartnerBalanceModule = () => {
     isSuccess: isSuccessJettonWallets,
   } = useJettonWallet({ address: address! });
   const jettonWallet = jettonWallets?.balances.find((balance) => balance.jetton.symbol === 'FROGE');
-  const { data: debt, isLoading: isLoadingDebt, isError: isErrorDebt, isSuccess: isSuccessDebt } = useDebt(LEADER_ID);
-  const { data: earnings, isLoading: isLoadingEarnings, isError: isErrorEarnings, isSuccess: isSuccessEarnings } = useEarnings(LEADER_ID);
+  const { data: debt, isLoading: isLoadingDebt, isError: isErrorDebt, isSuccess: isSuccessDebt } = useDebt(account?.user_id ?? 0);
+  const { data: earnings, isLoading: isLoadingEarnings, isError: isErrorEarnings, isSuccess: isSuccessEarnings } = useEarnings(account?.user_id ?? 0);
   return (
     <div className='flex h-[128px] w-[832px] flex-col gap-2.5'>
       <h2 className='text-lg font-medium text-black/85'>Партнерский баланс:</h2>
@@ -25,7 +26,9 @@ export const PartnerBalanceModule = () => {
         {isLoadingEarnings && <p>Loading...</p>}
         {isErrorEarnings && <p>Ошибка при загрузке баланса</p>}
         <Line />
-        {isSuccessJettonWallets && jettonWallet && <CurrentBalance balance={Number(jettonWallet?.balance) / 10 ** jettonWallet?.jetton.decimals} />}
+        {isSuccessJettonWallets && jettonWallet && (
+          <CurrentBalance balance={(Number(jettonWallet?.balance) / 10 ** jettonWallet?.jetton.decimals).toFixed(2)} />
+        )}
         {isLoadingJettonWallets && <p>Loading...</p>}
         {isErrorJettonWallets && <p>Ошибка при загрузке баланса</p>}
         <Line />

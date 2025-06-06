@@ -14,7 +14,7 @@ const useDebt = (authorId: number) =>
       const debt = paymentOrders.reduce((acc, order) => acc + order.total_amount, 0);
       return debt;
     },
-    enabled: !!authorId,
+    enabled: !!authorId && authorId !== 0,
   });
 
 const EarningsSchema = z.object({
@@ -32,6 +32,7 @@ const useEarnings = (authorId: number) =>
       const earnings = validateResult(data, EarningsSchema);
       return earnings;
     },
+    enabled: !!authorId && authorId !== 0,
   });
 
 export { useDebt, useEarnings };

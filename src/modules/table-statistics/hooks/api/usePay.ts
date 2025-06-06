@@ -54,10 +54,10 @@ const usePay = (authorId: number) => {
     ]);
   };
 
-  const payOrder = async (createCell: CreateCellFn<string>, orderId: string, [reffererId, amount]: [number, number]) => {
+  const payOrder = async (createCell: CreateCellFn<string>, orderId: string, obj: { amount: number; reffererId: number }) => {
     if (!jettonWallet) return;
     const { cell } = await createCell(orderId);
-    const trRes = await payProcess(cell, amount);
+    const trRes = await payProcess(cell, 0.4);
     if (!trRes) return;
     const { trHash, validUntil } = trRes;
     deleteOrder([
@@ -68,7 +68,7 @@ const usePay = (authorId: number) => {
         payment_order_id: orderId,
         status: 'pending',
       },
-      { type: 'single', array: [{ amount, reffererId }] },
+      { type: 'single', array: [obj] },
     ]);
   };
 

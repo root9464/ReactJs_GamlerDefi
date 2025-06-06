@@ -1,4 +1,4 @@
-import { LEADER_ID } from '@/shared/constants/consts';
+import { useAccount } from '@/shared/hooks/api/useAccount';
 import { formatUnixToDate } from '@/shared/utils/utils';
 import { useTonAddress } from '@tonconnect/ui-react';
 import { Button, Tabs } from 'antd';
@@ -14,12 +14,14 @@ import { useRefferals } from './hooks/api/useRefferals';
 
 export const TableStatisticsModule = () => {
   const address = useTonAddress();
+  const { data: account } = useAccount(address ?? '');
+
   const {
     data: paymentOrders,
     isLoading: isLoadingPaymentOrders,
     isError: isErrorPaymentOrders,
     isSuccess: isSuccessPaymentOrders,
-  } = usePaymentOrder(LEADER_ID);
+  } = usePaymentOrder(account?.user_id ?? 0);
 
   const debt_table_data = paymentOrders
     ? paymentOrders.map((order) => ({
@@ -33,7 +35,7 @@ export const TableStatisticsModule = () => {
     : [];
 
   const { mutateAsync: createCell, isPending: isPendingPayAllOrders, isSuccess: isSuccessPayAllOrders } = usePayAllOrders();
-  const { payAllOrders } = usePay(LEADER_ID);
+  const { payAllOrders } = usePay(account?.user_id ?? 0);
   const debt_arr = debt_table_data.map((order) => ({
     amount: order.debt_amount,
     reffererId: order.refferer_id,
@@ -52,7 +54,6 @@ export const TableStatisticsModule = () => {
   } = useGetTransactions(address ?? '');
 
   const transactions_table_data = transactions && filterFrogeTransfers(transactions);
-  console.log(transactions_table_data);
 
   return (
     <div className='flex flex-col gap-2.5'>

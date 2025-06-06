@@ -1,4 +1,5 @@
-import { LEADER_ID } from '@/shared/constants/consts';
+import { useQueryClient } from '@tanstack/react-query';
+import { useTonAddress } from '@tonconnect/ui-react';
 import type { GetProp, TablePaginationConfig, TableProps } from 'antd';
 import { Button, Table } from 'antd';
 import Column from 'antd/es/table/Column';
@@ -6,6 +7,7 @@ import type { SorterResult } from 'antd/es/table/interface';
 import { useState, type FC } from 'react';
 import { usePay } from '../hooks/api/usePay';
 import { usePayOrder } from '../hooks/api/usePayOrder';
+import type { AdditionalInformation } from '../hooks/api/usePaymentOrders';
 
 type DebtTableDataType = {
   order_id: string;
@@ -24,8 +26,11 @@ type TableParams = {
 };
 
 export const DebtTable: FC<{ tableData: DebtTableDataType[] }> = ({ tableData }) => {
+  const address = useTonAddress();
+  const queryClient = useQueryClient();
+  const cacheUserData: AdditionalInformation | undefined = queryClient.getQueryData(['account', address]);
   const { mutateAsync: createCell, isPending, isSuccess } = usePayOrder();
-  const { payOrder } = usePay(LEADER_ID);
+  const { payOrder } = usePay(cacheUserData?.user_id ?? 0);
   const [tableParams, setTableParams] = useState<TableParams>({
     pagination: {
       current: 1,
@@ -50,7 +55,9 @@ export const DebtTable: FC<{ tableData: DebtTableDataType[] }> = ({ tableData })
         title={isPending ? 'Ожидание...' : isSuccess ? 'Выполнено' : 'Действие'}
         dataIndex='action'
         render={(_, record: DebtTableDataType) => (
-          <Button key={record.order_id} onClick={() => payOrder(createCell, record.order_id, [record.refferer_id, record.debt_amount])}>
+          <Button
+            key={record.order_id}
+            onClick={() => payOrder(createCell, record.order_id, { amount: record.debt_amount, reffererId: record.refferer_id })}>
             Действие
           </Button>
         )}
